@@ -1,22 +1,69 @@
 const puppeteer = require('puppeteer');
-const URL_TEST = "http://10.109.8.56:26300/api/v1/health";
-async function testTaxiResult() {
-    console.log('Запуск браузера');
+
+// const URL_TEST = "http://10.109.37.182:26300/api/v1/health";
+const URL_MYVODAFONE_MOBIL = "http://localhost:8080/myvodafone/mobil";
+const URL_MYVODAFONE = "http://localhost:8080/myvodafone";
+const URL_404_NOT_FOUND = "http://localhost:8080/shop/404";
+const URL_TEST = "http://localhost:8080/c/portal/login";
+const URL_O_PROBE = "http://localhost:8080/o/probe";
+const DEVICES = "http://localhost:8080/shop/okostelefonok?brand=\"Apple\"";
+
+const pagesSize = 20;
+
+function delay(time) {
+	return new Promise(function(resolve) {
+		setTimeout(resolve, time)
+	});
+}
+
+async function openPageBrowser(browser, i, url_redirect) {
+	for (let j = 1; j < pagesSize; j++) {
+		console.log('Create new browser page. Iteration: ' + i + ' page number: ' + j);
+		pages = [];
+		pages.push(await browser.newPage());
+		pages.push(await browser.newPage());
+		pages.push(await browser.newPage());
+		pages.push(await browser.newPage());
+		pages.push(await browser.newPage());
+		pages.push(await browser.newPage());
+		pages.push(await browser.newPage());
+		pages.push(await browser.newPage());
+		pages.push(await browser.newPage());
+		pages.push(await browser.newPage());
+		console.log('Go to page: ' + url_redirect + '. Iteration: ' + i + ' page number: ' + j);
+		for (let k = 0; k < pages.length; k++) {
+			await pages[k].goto(url_redirect);
+		}
+		// console.log('Close page. Iteration: ' + i + ' page number: ' + j);
+		const iterations = 1000000;
+		let iter = 1;
+		while (i < iterations) {
+			console.log('Reloading page. Iteration: ' + iter + ' page number: ' + j);
+			for (let k = 0; k < pages.length; k++) {
+				pages[k].reload();
+			}
+			iter++;
+		}
+		//await page.close();
+	}
+}
+
+async function testRun(url_redirect) {
+    console.log('Start browser');
     const browser = await puppeteer.launch({
         headless: false,
-        slowMo: 100
+        slowMo: 100,
+		ignoreHTTPSErrors: true
     });
-	const iterations = 10000;
-	let i = 0;
+	const iterations = 30;
+	let i = 1;
+	const page = await browser.newPage();
+	await page.goto(url_redirect);
 	while (i < iterations) {
-		console.log('Создание новой вкладки в браузере. Итервация: ' + i);
-		const page = await browser.newPage();
-		console.log('Переход по ссылке. Итервация: ' + i);
-		await page.goto(URL_TEST);
-		await page.close();
+		await openPageBrowser(browser, i, url_redirect)
 		i++;
 	}
-
+	// await delay(400000);
     // console.log('Шаг 1: ввод часов и минут');
     // const hoursInput = await page.$('#form-input-hour');
     // await hoursInput.type('08');
@@ -44,7 +91,12 @@ async function testTaxiResult() {
     // } else {
         // console.log(`Ошибка. Текст не начинается со слова 'Такси'`)
     // }
-    console.log('Закрытие браузера');
+    console.log('Closing browser');
     await browser.close();
 }
-testTaxiResult();
+
+// testRun(URL_MYVODAFONE_MOBIL);
+// testRun(URL_MYVODAFONE);
+// testRun(URL_404_NOT_FOUND);
+testRun(DEVICES);
+
